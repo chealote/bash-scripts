@@ -4,7 +4,10 @@ wait_seconds="60"
 ignorelist_filepath="$HOME/ignorelist"
 local_folder="$HOME/"
 remote_folder="$local_folder"
-known_ips="192.168.0.12"
+valid_ip_regex="192\.168\.0\.[0-9]{2}"
+
+# can be a list of ips separated by space
+known_ips=""
 
 function build_send_files_cmd {
 	ip="$1"
@@ -28,7 +31,7 @@ function send_files {
 }
 
 function get_remote_ips {
-	local_ip=$(ip r | grep -Eo "192\.168\.0\.[0-9]{2}" | head -n 1)
+	local_ip=$(ip r | grep -Eo $valid_ip_regex | head -n 1)
 	remote_ips=""
 	for ip in $known_ips; do
 		if [ "$ip" = "$local_ip" ]; then
@@ -59,13 +62,39 @@ function send_file_once {
 	exit
 }
 
-if [ "$1" = "-o" ]; then
-	send_file_once
+function simple_valid_ip {
+	ip="$1"
+	match=$(echo "$ip" | grep -Eo $valid_ip_regex | head -n 1 | wc -l)
+	if [ $match -gt 0 ]; then
+		echo 0
+	else
+		echo 1
+	fi
+}
+
+if [ "$known_ips" = "" ]; then
+	read -p "local IPs, separated by space: " known_ips
 fi
 
-remote_ips=$(get_remote_ips)
-while true; do
-	for ip in $remote_ips; do
+for ip in $known_ips; do
+	valid=$(simple_valid_ip "$ip")
+	if [ $valid -eq 0 ]; then
+		if [ "$1" = "-o" ]; then
+			send_file_once
+		fi
 		send_files "$ip" "$wait_seconds"
-	done
+	else
+		echo "${ip}: not a valid IP for regex: ${valid_ip_regex}"
+	fi
 done
+
+# if [ "$1" = "-o" ]; then
+# 	send_file_once
+# fi
+# 
+# remote_ips=$(get_remote_ips)
+# while true; do
+# 	for ip in $remote_ips; do
+# 		
+# 	done
+# done

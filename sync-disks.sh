@@ -1,14 +1,5 @@
 #!/bin/bash
 
-#rsync -aP --exclude-from=ignorelist /home/$USER/ ${REMOTE}:/home/$USER/
-
-#for folder in $(cat includefrom); do
-#	rsync --delete -aP --exclude-from=${ignorelist_filepath} $folder $REMOTE_FOLDER
-#done
-
-#echo "Check the commented command before running the script"
-#exit 1
-
 LOCAL_FOLDER="/home/$USER/"
 ignorelist_filepath="ignorelist"
 read -p "local or remote? (l/r): " option
